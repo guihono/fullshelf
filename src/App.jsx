@@ -122,14 +122,22 @@ async function searchTVMaze(term) {
   }));
 }
 
-// Games, comics, and movies go through the local proxy server (server/index.js)
+// Games, comics, and movies go through a proxy server (server/index.js)
 // since their upstream APIs (RAWG, Comic Vine, TMDB) don't allow direct
 // browser requests. Anime/manga/TV don't need this — AniList and TVmaze
 // are called directly above.
+//
+// In local dev, leave VITE_API_BASE unset — Vite's dev proxy forwards
+// relative /api/ calls to the local proxy server for you. In production
+// (e.g. the frontend on GitHub Pages, the proxy on Render), set
+// VITE_API_BASE to the proxy's full public URL at build time so requests
+// go to the right place.
+const API_BASE = import.meta.env.VITE_API_BASE || '';
+
 async function fetchViaProxy(path, term) {
   let response;
   try {
-    response = await fetch(`/api/${path}?q=${encodeURIComponent(term)}`);
+    response = await fetch(`${API_BASE}/api/${path}?q=${encodeURIComponent(term)}`);
   } catch (e) {
     const err = new Error('no-server');
     err.code = 'no-server';
